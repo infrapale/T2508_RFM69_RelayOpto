@@ -143,7 +143,7 @@ void uart_build_node_tx_str(void)
     rfm_receive_msg_st *receive_p = rfm_receive_get_data_ptr();
     // <#X1N:RMH1;RKOK1;T;->\n   -> {"Z":"MH1","S":"RKOK1","V":"T","R":"-"}
     uart.rx.msg.str = (char*) receive_p->radio_msg;  
-    uart.tx.str = "<#X1a:";
+    uart.tx.msg.str = "<#X1a:";
     json_pick_data_from_rx(&uart);
     #ifdef DEBUG_PRINT
     Serial.print("radio_msg: ");
@@ -153,22 +153,22 @@ void uart_build_node_tx_str(void)
     Serial.println(uart.node.value);
     Serial.println(uart.node.remark);
     #endif
-    uart.tx.str += uart.node.zone;
-    uart.tx.str += ';';
-    uart.tx.str += uart.node.name;
-    uart.tx.str += ';';
-    uart.tx.str += uart.node.value;
-    uart.tx.str += ';';
-    uart.tx.str += uart.node.remark;
-    uart.tx.str += '>';
+    uart.tx.msg.str += uart.node.zone;
+    uart.tx.msg.str += ';';
+    uart.tx.msg.str += uart.node.name;
+    uart.tx.msg.str += ';';
+    uart.tx.msg.str += uart.node.value;
+    uart.tx.msg.str += ';';
+    uart.tx.msg.str += uart.node.remark;
+    uart.tx.msg.str += '>';
 }
 
 void uart_build_raw_tx_str(void)
 {
     rfm_receive_msg_st *receive_p = rfm_receive_get_data_ptr();
-    uart.tx.str = "<#X1r:";
-    uart.tx.str += (char*) receive_p->radio_msg;
-    uart.tx.str += '>';
+    uart.tx.msg.str = "<#X1r:";
+    uart.tx.msg.str += (char*) receive_p->radio_msg;
+    uart.tx.msg.str += '>';
 }
 
 void uart_rx_send_rfm_from_raw(void)
@@ -209,12 +209,12 @@ void uart_exec_cmnd(uart_cmd_et ucmd)
         case UART_CMD_READ_RAW:
             rfm_receive_clr_message_flag();
             uart_build_raw_tx_str();
-            SerialX.println(uart.tx.str);          
+            SerialX.println(uart.tx.msg.str);          
             break;
         case UART_CMD_READ_OPTO:
             rfm_receive_clr_message_flag();
             uart_build_node_tx_str();
-            SerialX.println(uart.tx.str);          
+            SerialX.println(uart.tx.msg.str);          
           break;
 
     }
@@ -230,9 +230,22 @@ void uart_print_rx_metadata(void)
     Serial.print("Module Addr "); Serial.println(uart.rx.msg.module_addr);
     Serial.print("Function    "); Serial.println(uart.rx.msg.function);
     Serial.print("Index       "); Serial.println(uart.rx.msg.index);
-    Serial.print("Action      "); Serial.println(uart.rx.msg.action);
+    Serial.print("Action      "); Serial.println((char)uart.rx.msg.action);
     Serial.print("Value       "); Serial.println(uart.rx.msg.value);
 }    
+
+void uart_build_tx_msg(uart_tx_st *txp)
+{
+    txp->msg.module_tag;
+    txp->msg
+    txp->msg
+    txp->msg
+    txp->msg
+    txp->msg
+    txp->msg
+    txp->msg
+
+}
 
 void uart_alarm_handling_task(void)
 {
@@ -242,7 +255,7 @@ void uart_alarm_handling_task(void)
             uart_alarm_handle.state = 10;
             break;
         case 10:
-            Serial.println("<#O11>");
+            Serial.println("<R1O2?>");
             uart.rx.timeout = millis() + 10000;
             uart_alarm_handle.state = 20;
             break;

@@ -59,17 +59,9 @@ typedef struct
 
 typedef struct
 {
-    String          str;
+    uart_msg_st     msg;
     uint32_t        timeout;
-    //char            radio_msg[MAX_MESSAGE_LEN];
-    uint8_t         len;
-    bool            avail;
-    char            module;
-    char            addr;         
-    uart_cmd_et     cmd;
-    msg_format_et   format;
     msg_format_et   cmd_format;
-    msg_status_et   status;
 } uart_tx_st;
 
 typedef struct
