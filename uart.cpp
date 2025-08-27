@@ -236,15 +236,16 @@ void uart_print_rx_metadata(void)
 
 void uart_build_tx_msg(uart_tx_st *txp)
 {
-    txp->msg.module_tag;
-    txp->msg
-    txp->msg
-    txp->msg
-    txp->msg
-    txp->msg
-    txp->msg
-    txp->msg
-
+    txp->msg.str = '<'; 
+    txp->msg.str.concat(txp->msg.module_tag);
+    txp->msg.str.concat(txp->msg.module_addr);
+    txp->msg.str.concat(txp->msg.function);
+    txp->msg.str.concat(txp->msg.index);
+    txp->msg.str.concat((char)txp->msg.action);
+    txp->msg.str.concat(txp->msg.value);
+    txp->msg.str.concat('>');
+    //txp->msg.str = "<XCCE>";
+    
 }
 
 void uart_alarm_handling_task(void)
@@ -252,10 +253,19 @@ void uart_alarm_handling_task(void)
     switch(uart_alarm_handle.state)
     {
         case 0:
+            uart.tx.msg.module_tag = 'R';
+            uart.tx.msg.function = 'O';
+            uart.tx.msg.action = '?';
+            uart.tx.msg.value = '-';
             uart_alarm_handle.state = 10;
             break;
         case 10:
-            Serial.println("<R1O2?>");
+            
+            uart.tx.msg.module_addr = '1';
+            uart.tx.msg.index = '1';
+
+            uart_build_tx_msg(&uart.tx);
+            Serial.print("build_tx_msg: "); Serial.println(uart.tx.msg.str);
             uart.rx.timeout = millis() + 10000;
             uart_alarm_handle.state = 20;
             break;
@@ -275,10 +285,32 @@ void uart_alarm_handling_task(void)
             }
             break;
         case 30:
+            uart.tx.msg.index = '2';
+            uart_build_tx_msg(&uart.tx);
+            Serial.print("build_tx_msg: "); Serial.println(uart.tx.msg.str);
+            uart.rx.timeout = millis() + 10000;
             uart_alarm_handle.state = 40;
             break;
         case 40:
-            uart_alarm_handle.state = 0;
+            if (uart_read_uart())
+            {
+                Serial.println(uart.rx.msg.str);
+                uart_parse_rx_frame();
+                uart_print_rx_metadata();
+                uart_alarm_handle.state = 50;
+
+            }
+            else if (millis() > uart.rx.timeout)
+            {
+                Serial.println("UART rx timeout");
+                uart_alarm_handle.state = 50;
+            }
+            break;
+        case 50:
+            uart.rx.timeout = millis() + 10000;
+            uart_alarm_handle.state = 60;
+        case 60:
+            if (millis() > uart.rx.timeout) uart_alarm_handle.state = 0;
             break;
     }
 }

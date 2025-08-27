@@ -154,6 +154,7 @@ Read Opto Input Message:
 #include "rfm_receive.h"
 #include "rfm_send.h"
 #include "io.h"
+#include "pir.h"
 
 #define ZONE  "OD_1"
 //*********************************************************************************************
@@ -236,6 +237,9 @@ void setup()
     
     initialize_tasks();
     uart_initialize();
+    pir_initialize();
+
+    rfm_send_radiate_msg("T2508_RelayOpto");
 
 
     #ifdef ADAFRUIT_FEATHER_M0
