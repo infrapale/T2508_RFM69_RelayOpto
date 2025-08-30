@@ -5,6 +5,7 @@
 #include "rfm_receive.h"
 #include "rfm_send.h"
 #include "io.h"
+#include "pir.h"
 
 uart_st         uart;
 atask_st uart_alarm_handle     = {"UART Alarm Task", 1000,0, 0, 255, 0, 1, uart_alarm_handling_task};
@@ -89,26 +90,6 @@ void uart_parse_rx_frame(void)
                 break;   
         }
 
-        /*
-        uart.rx.msg.status = STATUS_CORRECT_FRAME;
-        if ((uart.rx.msg.str.charAt(6)  == '{') && 
-            (uart.rx.msg.str.charAt(uart.rx.msg.len-2) == '}'))
-        {
-            uart.rx.msg.format = MSG_FORMAT_SENSOR_JSON;
-        } 
-        else 
-        {
-            uart.rx.msg.format = MSG_FORMAT_RAW;
-        }   
-        uart.rx.msg.function  = uart.rx.msg.str.charAt(2);
-        uart.rx.msg.addr    = uart.rx.msg.str.charAt(3);
-        uart.rx.msg.cmd     = (uart_cmd_et)uart.rx.msg.str.charAt(4);
-
-        if((uart.rx.msg.function == me.function) && (uart.rx.msg.addr == me.addr))
-            uart.rx.msg.status = STATUS_OK_FOR_ME;
-        else 
-            uart.rx.msg.status = STATUS_NOT_FOR_ME;
-        */
     }
     else uart.rx.msg.status = STATUS_INCORRECT_FRAME;
 }
@@ -190,7 +171,7 @@ void uart_rx_send_rfm_from_node(void)
 void uart_exec_cmnd(uart_cmd_et ucmd)
 {
     String str = "<#Xux:0>";
-    str[3] = me.addr;
+    //str[3] = me.addr;
     switch(ucmd)
     {
         case UART_CMD_TRANSMIT_RAW:
@@ -234,6 +215,37 @@ void uart_print_rx_metadata(void)
     Serial.print("Value       "); Serial.println(uart.rx.msg.value);
 }    
 
+void uart_handle_rx_data(void)
+{
+    uint8_t pir_indx;
+    uint8_t pir_value = PIR_STATUS_UNDEFINED;
+
+    if(uart.rx.msg.function == 'O')
+    {
+        pir_indx = 
+            (uart.rx.msg.module_addr - '1') * 2 +
+            (uart.rx.msg.index - '1');
+        if ((pir_indx < NBR_OF_PIR) && (uart.rx.msg.action == UART_ACTION_REPLY));
+        {
+            switch(uart.rx.msg.value)
+            {
+                case UART_VALUE_LOW:
+                    pir_value = PIR_STATUS_INACTIVE;
+                    break;
+                case UART_VALUE_HIGH:
+                    pir_value = PIR_STATUS_ACTIVE;
+                    break;
+            }
+        }
+        if(pir_value != PIR_STATUS_UNDEFINED) 
+        {
+            pir_set_status(pir_indx, pir_value);
+            //Serial.print("PIR Status [");Serial.print(pir_indx);
+            //Serial.print("] = "); Serial.println(pir_value);
+        }
+    }
+}
+
 void uart_build_tx_msg(uart_tx_st *txp)
 {
     txp->msg.str = '<'; 
@@ -265,44 +277,46 @@ void uart_alarm_handling_task(void)
             uart.tx.msg.index = '1';
 
             uart_build_tx_msg(&uart.tx);
-            Serial.print("build_tx_msg: "); Serial.println(uart.tx.msg.str);
+            // Serial.print("build_tx_msg: "); Serial.println(uart.tx.msg.str);
             uart.rx.timeout = millis() + 10000;
             uart_alarm_handle.state = 20;
             break;
         case 20:
             if (uart_read_uart())
             {
-                Serial.println(uart.rx.msg.str);
+                //Serial.println(uart.rx.msg.str);
                 uart_parse_rx_frame();
-                uart_print_rx_metadata();
+                // uart_print_rx_metadata();
+                uart_handle_rx_data();
                 uart_alarm_handle.state = 30;
 
             }
             else if (millis() > uart.rx.timeout)
             {
-                Serial.println("UART rx timeout");
+                //Serial.println("UART rx timeout");
                 uart_alarm_handle.state = 30;
             }
             break;
         case 30:
             uart.tx.msg.index = '2';
             uart_build_tx_msg(&uart.tx);
-            Serial.print("build_tx_msg: "); Serial.println(uart.tx.msg.str);
+            //Serial.print("build_tx_msg: "); Serial.println(uart.tx.msg.str);
             uart.rx.timeout = millis() + 10000;
             uart_alarm_handle.state = 40;
             break;
         case 40:
             if (uart_read_uart())
             {
-                Serial.println(uart.rx.msg.str);
+                //Serial.println(uart.rx.msg.str);
                 uart_parse_rx_frame();
-                uart_print_rx_metadata();
+                // uart_print_rx_metadata();
+                uart_handle_rx_data();
                 uart_alarm_handle.state = 50;
 
             }
             else if (millis() > uart.rx.timeout)
             {
-                Serial.println("UART rx timeout");
+                //Serial.println("UART rx timeout");
                 uart_alarm_handle.state = 50;
             }
             break;

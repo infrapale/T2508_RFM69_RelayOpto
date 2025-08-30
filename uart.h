@@ -33,6 +33,12 @@ typedef enum
     UART_ACTION_REPLY  = ':',
 } uart_action_et;
 
+typedef enum
+{
+    UART_VALUE_LOW      = 'L',
+    UART_VALUE_HIGH     = 'H'
+} uart_value_et;
+
 typedef struct
 {
     String          str;
@@ -45,8 +51,8 @@ typedef struct
     char            index;  
     uart_action_et  action;   //set/get/reply
     char            value;       
-    uart_cmd_et     cmd;
-    msg_format_et   format;
+    //uart_cmd_et     cmd;
+    //msg_format_et   format;
     msg_status_et   status;
 } uart_msg_st;
 

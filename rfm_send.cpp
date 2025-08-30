@@ -14,8 +14,6 @@ extern RH_RF69 *rf69p;
 
 rfm_send_msg_st     send_msg;
 
-//char radio_packet[RH_RF69_MAX_MESSAGE_LEN];
-
 rfm_send_msg_st *rfm_send_get_data_ptr(void)
 {
     return &send_msg;

@@ -106,11 +106,11 @@ Relay Node Rx Mesage:   <#X1N:RMH1;RKOK1;T;->
 
 ******** UART ******************* Read PIR    ********* Radio ********************
                                   -----------
-<----<#O11>\n---------------------|         | 
+-----<#R1O1?->\n----------------->|         | 
                                   |         |
------<#O11:L>\n------------------>|         |
+-----<#R1O1:L>\n----------------->|         |
                                   | UART_SM |
-                                  |         |----{"Z":"TK1","S":"PIR_1","V":"A","R":"-"}-->
+                                  |         |----{"Z":"TK1","S":"PIR_1","V":"H","R":"-"}-->
                                   | Home==T |----{"Z":"VA","S":"Beep","V":"1","R":"-"}---->
                                   | Home==F |----{"Z":"VA","S":"Beep","V":"5","R":"-"}---->
                                   |         |
@@ -164,18 +164,8 @@ Read Opto Input Message:
 
 RH_RF69         rf69(RFM69_CS, RFM69_INT);
 RH_RF69         *rf69p;
-module_data_st  me = {'X','1'};
-time_type       MyTime = {2023, 11,01,1,01,55}; 
-
-#define NBR_TEST_MSG  4
-#define LEN_TEST_MSG  32
-const char test_msg[NBR_TEST_MSG][LEN_TEST_MSG] =
-{  //12345678901234567890123456789012
-    "<#X1N:Dock;T_bmp1;9.1;->",
-    "<#X1N:Dock;T_dht22;8.7;->",
-    "<#X1N:Dock;T_Water;5.3;->",
-    "<#X1N:Dock;ldr1;0.33;->",
-};
+///module_data_st  me = {'X','1'};
+//time_type       MyTime = {2023, 11,01,1,01,55}; 
 
 void debug_print_task(void);
 void run_100ms(void);
@@ -207,11 +197,7 @@ void initialize_tasks(void)
   atask_add_new(&debug_print_handle);
   atask_add_new(&clock_handle);
   atask_add_new(&rfm_receive_handle);
-
-  #ifdef SEND_TEST_MSG
-  atask_add_new(&send_test_data_handle);
-  #endif
-  Serial.print("Tasks initialized "); Serial.println(TASK_NBR_OF);
+  Serial.print(F("Tasks initialized ")); Serial.println(TASK_NBR_OF);
 }
 
 
@@ -220,9 +206,9 @@ void setup()
     //while (!Serial); // wait until serial console is open, remove if not tethered to computer
     delay(2000);
     Serial.begin(9600);
-    Serial.print("T2508_RelayOpto"); Serial.print(" Compiled: ");
-    Serial.print(__DATE__); Serial.print(" ");
-    Serial.print(__TIME__); Serial.println();
+    Serial.print(F("T2508_RelayOpto")); Serial.print(F(" Compiled: "));
+    Serial.print(F(__DATE__)); Serial.print(F(" "));
+    Serial.print(F(__TIME__)); Serial.println();
 
     SerialX.begin(9600);
     
@@ -244,7 +230,7 @@ void setup()
 
     #ifdef ADAFRUIT_FEATHER_M0
     // Initialze WDT with a 2 sec. timeout
-    wdt_init ( WDT_CONFIG_PER_16K );
+    //wdt_init ( WDT_CONFIG_PER_16K );
     #endif
     #ifdef PRO_MINI_RFM69
     //watchdog.set_timeout(4);
@@ -263,20 +249,6 @@ void loop()
 
 void rfm_receive_task(void) 
 {
-    // uart_read_uart();    // if available -> uart->prx.str uart->rx.avail
-    // if(uart_p->rx.avail)
-    // {
-    //     uart_parse_rx_frame();
-    //     #ifdef DEBUG_PRINT
-    //     Serial.println(uart_p->rx.str);
-    //     uart_print_rx_metadata();
-    //     #endif
-    //     if ( uart_p->rx.status == STATUS_OK_FOR_ME)
-    //     {
-    //         uart_exec_cmnd(uart_p->rx.cmd);
-    //     }
-    //     uart_p->rx.avail = false;
-    // }
     rfm_receive_message();
     #ifdef ADAFRUIT_FEATHER_M0
     wdt_reset();
@@ -289,39 +261,29 @@ void rfm_receive_task(void)
 
 void run_100ms(void)
 {
-    static uint8_t ms100 = 0;
-    if (++ms100 >= 10 )
-    {
-        ms100 = 0;
-        if (++MyTime.second > 59 )
-        {
-          MyTime.second = 0;
-          if (++MyTime.minute > 59 )
-          {    
-            MyTime.minute = 0;
-            if (++MyTime.hour > 23)
-            {
-                MyTime.hour = 0;
-            }
-          }   
-      }
-    }
+    // static uint8_t ms100 = 0;
+    // if (++ms100 >= 10 )
+    // {
+    //     ms100 = 0;
+    //     if (++MyTime.second > 59 )
+    //     {
+    //       MyTime.second = 0;
+    //       if (++MyTime.minute > 59 )
+    //       {    
+    //         MyTime.minute = 0;
+    //         if (++MyTime.hour > 23)
+    //         {
+    //             MyTime.hour = 0;
+    //         }
+    //       }   
+    //   }
+    // }
     io_run_100ms();
 }
 
 void debug_print_task(void)
 {
-  atask_print_status(true);
+  //atask_print_status(true);
+  //rfm_send_radiate_msg("Debug");
 }
-
-#ifdef SEND_TEST_MSG
-void send_test_data_task(void)
-{
-    if  (send_test_data_handle.state >= NBR_TEST_MSG ) send_test_data_handle.state = 0;
-
-    uart_p->rx.str  = test_msg[send_test_data_handle.state];
-    uart_p->rx.avail = true;
-    send_test_data_handle.state++;
-}
-#endif
 

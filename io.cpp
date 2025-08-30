@@ -19,6 +19,7 @@ led_ctrl_st led_ctrl[LED_NBR_OF] =
 
 void io_initialize(void)
 {
+    pinMode(RFM69_RST,OUTPUT);
     pinMode(PIN_LED_ONBOARD, OUTPUT);
     digitalWrite(PIN_LED_ONBOARD, LOW);
 

@@ -22,17 +22,17 @@ void rfm69_initialize(RH_RF69 *rf69_ptr)
     digitalWrite(RFM69_RST, LOW);    delay(100);
 
     if (!rf69p->init()) {
-       Serial.println("RFM69 radio init failed");
+       Serial.println(F("RFM69 radio init failed"));
        while (1);
     }
     #ifdef DEBUG_PRINT
-    Serial.println("RFM69 radio init OK!");
+    Serial.println(F("RFM69 radio init OK!"));
     #endif
     // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM (for low power module)
     // No encryption
     if (!rf69p->setFrequency(RF69_FREQ)) {
         #ifdef DEBUG_PRINT
-        Serial.println("setFrequency failed");
+        Serial.println(F("setFrequency failed"));
         #endif
     }
     // If you are using a high power RF69 eg RFM69HW, you *must* set a Tx power with the
@@ -43,6 +43,6 @@ void rfm69_initialize(RH_RF69 *rf69_ptr)
     rf69p->setEncryptionKey(key);
   
     #ifdef DEBUG_PRINT
-    Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
+    Serial.print(F("RFM69 radio @"));  Serial.print((int)RF69_FREQ);  Serial.println(F(" MHz"));
     #endif
 }

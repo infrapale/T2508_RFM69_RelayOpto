@@ -32,7 +32,7 @@ uint16_t json_convert_uart_node_to_json(char *buff, uart_st *uart_p)
         return( json_len );
     }
     else {
-      Serial.print("JSON string was too long for the radio packet: "); 
+      Serial.print(F("JSON string was too long for the radio packet: ")); 
       Serial.println(json_len);
       return(0);
     }
@@ -72,7 +72,7 @@ uint16_t json_convert_sensor_float_to_json(
        return( json_len );
     }
     else {
-      Serial.print("JSON string was too long for the radio packet: "); 
+      Serial.print(F("JSON string was too long for the radio packet: ")); 
       Serial.println(json_len);
       return(0);
     }
