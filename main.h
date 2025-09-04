@@ -15,6 +15,8 @@
 #define SerialX Serial
 #endif
 
+
+#define TEST_MODE
 #define TASK_NBR_OF  3
 //#define LED_INDICATION
 

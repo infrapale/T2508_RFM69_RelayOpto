@@ -5,9 +5,13 @@
 typedef struct
 {
     char            radio_msg[MAX_MESSAGE_LEN];
+    uint32_t        send_timeout;
 } rfm_send_msg_st;
 
 
+void rfm_send_initialize(void);
+
+bool rfm_send_ready(void);
 
 /// @brief  Get pointer to module data 
 /// @note   

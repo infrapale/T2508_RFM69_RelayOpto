@@ -220,7 +220,7 @@ void setup()
     rfm_receive_initialize();
     io_initialize();
     // Hard Reset the RFM module
-    
+    rfm_send_initialize();
     initialize_tasks();
     uart_initialize();
     pir_initialize();

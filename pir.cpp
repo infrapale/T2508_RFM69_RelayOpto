@@ -7,12 +7,24 @@
 #include "io.h"
 #include "pir.h"
 
+typedef struct
+{
+    uint32_t interval;
+    uint32_t active;
+    uint32_t timeout;
+} pir_test_st;
+
 pir_st  pir[NBR_OF_PIR] = 
 {
     {"Piha", "PIR1", 0, 0, 0, 0},
     {"Piha", "PIR2", 0, 0, 0, 0},
 };
 
+pir_test_st pir_test[NBR_OF_PIR] = 
+{
+    { 33000, 5000, 0},
+    { 60000, 4000, 0},
+};
 
 typedef struct
 {
@@ -73,39 +85,79 @@ void pir_send_radio_msg(pir_st *pirp)
 void pir_state_machine(pir_st *pirp)
 {
     //Serial.print(pirp->state);
-    switch(pirp->state)
+    if(rfm_send_ready())
     {
-        case 0:  // start
-            if(pirp->prev_active != pirp->new_active)
-            pirp->state = 10;
-            break;
-        case 10:  // not activated
-            pirp->prev_active = pirp->new_active;
-            pir_send_radio_msg(pirp);
-            if(pirp->new_active == PIR_STATUS_ACTIVE)
-            {
-                pirp->timeout = millis() + 2000;
-            }
-            else if(pirp->new_active == PIR_STATUS_INACTIVE)
-            {
-                pirp->timeout = millis() + 1000;
-            }
-            pirp->state = 20;
-            break;
-        case 20:
-            if(pirp->timeout > millis()) pirp->state = 0;
-            break;
-    }
-    if (pirp->state != pirp->prev_state )
-    {
-        // Serial.print(pirp->zone); Serial.print(F("/"));
-        // Serial.print(pirp->name); Serial.print(F(": "));
-        // Serial.print(pirp->prev_state); Serial.print(F("->:"));
-        // Serial.print(pirp->state); Serial.print(F(": "));
-        // Serial.print(pirp->new_active); Serial.println();
-        pirp->prev_state =pirp->state;
+        switch(pirp->state)
+        {
+            case 0:  // start
+                if(pirp->prev_active != pirp->new_active)
+                pirp->state = 10;
+                break;
+            case 10:  // not activated
+                pirp->prev_active = pirp->new_active;
+                pir_send_radio_msg(pirp);
+                if(pirp->new_active == PIR_STATUS_ACTIVE)
+                {
+                    pirp->timeout = millis() + 2000;
+                }
+                else if(pirp->new_active == PIR_STATUS_INACTIVE)
+                {
+                    pirp->timeout = millis() + 1000;
+                }
+                pirp->state = 20;
+                break;
+            case 20:
+                if(pirp->timeout > millis()) pirp->state = 0;
+                break;
+        }
+        if (pirp->state != pirp->prev_state )
+        {
+            // Serial.print(pirp->zone); Serial.print(F("/"));
+            // Serial.print(pirp->name); Serial.print(F(": "));
+            // Serial.print(pirp->prev_state); Serial.print(F("->:"));
+            // Serial.print(pirp->state); Serial.print(F(": "));
+            // Serial.print(pirp->new_active); Serial.println();
+            pirp->prev_state =pirp->state;
+        }
+
     }
 }
+
+
+void pir_test_state_machine(pir_test_st *testp, pir_st *pirp)
+{
+    //Serial.print(pirp->state);
+    if(rfm_send_ready())
+    {
+        switch(pirp->state)
+        {
+            case 0:  // start
+                if(pirp->prev_active != pirp->new_active)
+                testp->timeout = millis() + testp->interval;
+                pirp->state = 10;
+                break;
+            case 10:  
+                if( millis() > testp->timeout) 
+                {
+                    pirp->state = 20;
+                    pirp->new_active = PIR_STATUS_ACTIVE;
+                    pir_send_radio_msg(pirp);
+                }
+                break;
+            case 20:
+                if( millis() > testp->timeout) 
+                {
+                    pirp->state = 10;
+                    testp->timeout = millis() + testp->interval;
+                    pirp->new_active = PIR_STATUS_INACTIVE;
+                    pir_send_radio_msg(pirp);
+                }
+                break;
+        }
+    }
+}
+
+
 
 void pir_task(void)
 {
@@ -116,7 +168,11 @@ void pir_task(void)
             pir_handle.state = 10;
             break;
         case 10:
+            #ifdef TEST_MODE
+            pir_test_state_machine(&pir_test[pir_ctrl.sensor_indx], &pir[pir_ctrl.sensor_indx]);
+            #else
             pir_state_machine(&pir[pir_ctrl.sensor_indx]);
+            #endif
             pir_ctrl.sensor_indx++;
             if (pir_ctrl.sensor_indx >= NBR_OF_PIR) pir_handle.state = 0;
             break;
