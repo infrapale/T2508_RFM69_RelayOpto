@@ -2,7 +2,7 @@
 #define __MAIN_H__
 #include "WString.h"
 
-//#define DEBUG_PRINT 
+#define DEBUG_PRINT 
 //#define SEND_TEST_MSG 
 //#define ADA_M0_RFM69 
 #define PRO_MINI_RFM69
@@ -16,7 +16,7 @@
 #endif
 
 
-#define TEST_MODE
+//#define TEST_MODE
 #define TASK_NBR_OF  3
 //#define LED_INDICATION
 

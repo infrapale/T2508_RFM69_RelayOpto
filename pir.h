@@ -28,4 +28,6 @@ void pir_initialize(void);
 
 void pir_set_status(uint8_t indx, uint8_t new_status);
 
+void pir_debug_print(void);
+
 #endif

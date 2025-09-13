@@ -128,8 +128,8 @@ Relay Mesage:
 Read Opto Input Message:
       <#Oui>   u = opto unit, i= opto index
       <=Oui:s>  s=state = H|L   High/Low
-      ----> <#O12>  
-      <---- <#O12:L>  
+      ----> <R1O1?->  
+      <---- <R1O2:L>  
 
 
 
@@ -283,7 +283,8 @@ void run_100ms(void)
 
 void debug_print_task(void)
 {
-  //atask_print_status(true);
+  atask_print_status(true);
+  pir_debug_print();
   //rfm_send_radiate_msg("Debug");
 }
 

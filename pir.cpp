@@ -84,8 +84,7 @@ void pir_send_radio_msg(pir_st *pirp)
 
 void pir_state_machine(pir_st *pirp)
 {
-    //Serial.print(pirp->state);
-    if(rfm_send_ready())
+     if(rfm_send_ready())
     {
         switch(pirp->state)
         {
@@ -96,6 +95,7 @@ void pir_state_machine(pir_st *pirp)
             case 10:  // not activated
                 pirp->prev_active = pirp->new_active;
                 pir_send_radio_msg(pirp);
+                Serial.print(F("pir_send_radio_msg:")); Serial.println(pirp->name);
                 if(pirp->new_active == PIR_STATUS_ACTIVE)
                 {
                     pirp->timeout = millis() + 2000;
@@ -107,7 +107,7 @@ void pir_state_machine(pir_st *pirp)
                 pirp->state = 20;
                 break;
             case 20:
-                if(pirp->timeout > millis()) pirp->state = 0;
+                if(millis() > pirp->timeout) pirp->state = 0;
                 break;
         }
         if (pirp->state != pirp->prev_state )
@@ -179,4 +179,17 @@ void pir_task(void)
     }
 
 }
+
+void pir_debug_print(void)
+{
+    for (uint8_t i=0; i<NBR_OF_PIR; i++)
+    {
+        Serial.print(i); Serial.print(": ");
+        Serial.print(pir[i].state);  Serial.print(" - ");
+        Serial.print(pir[i].prev_active); Serial.print("-->");
+        Serial.print(pir[i].new_active); Serial.print("\n");
+ 
+    }
+}
+
 
