@@ -34,11 +34,16 @@ void rfm_send_radiate_msg( char *radio_msg )
     if ((radio_msg[0] != 0) && rfm_send_ready())
     {
         #ifdef DEBUG_PRINT
+        Serial.print(F("radiate_msg: "));
         Serial.println(radio_msg);
         #endif
         rf69p->waitPacketSent();
         rf69p->send((uint8_t *)radio_msg, strlen(radio_msg));      
         send_msg.send_timeout = millis() + 2000;
+    }
+    else {
+        Serial.print(F("Not rfm_send_ready or =0? )"));
+        Serial.println(radio_msg[0]);
     }
 }
 

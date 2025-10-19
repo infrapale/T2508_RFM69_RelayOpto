@@ -8,7 +8,7 @@
 #include "pir.h"
 
 uart_st         uart;
-atask_st uart_alarm_handle     = {"UART Alarm Task", 1000,0, 0, 255, 0, 1, uart_alarm_handling_task};
+atask_st uart_alarm_handle     = {"UART Alarm Task", 100,0, 0, 255, 0, 1, uart_alarm_handling_task};
 //atask_st debug_print_handle        = {"Debug Print    ", 5000,0, 0, 255, 0, 1, debug_print_task};
 
 uart_st *uart_get_data_ptr(void)
@@ -273,29 +273,28 @@ void uart_alarm_handling_task(void)
             uart.tx.msg.module_addr = '1';
             uart.tx.msg.index = '1';
             break;
-        case 10:
-            
- 
+        case 10:      
             uart_build_tx_msg(&uart.tx);
             // Serial.print("build_tx_msg: "); 
-            Serial.println(uart.tx.msg.str);
+            //Serial.println(uart.tx.msg.str);
             uart.rx.timeout = millis() + 10000;
             uart_alarm_handle.state = 20;
             break;
         case 20:
             if (uart_read_uart())
             {
+                Serial.print("uart.rx.msg.str: ");
                 Serial.println(uart.rx.msg.str);
                 uart_parse_rx_frame();
-                uart_print_rx_metadata();
+                //uart_print_rx_metadata();
                 uart_handle_rx_data();
-                uart_alarm_handle.state = 25;
+                uart_alarm_handle.state = 10;
 
             }
             else if (millis() > uart.rx.timeout)
             {
                 //Serial.println("UART rx timeout");
-                uart_alarm_handle.state = 25;
+                uart_alarm_handle.state = 10;
             }
             break;
         case 25:
@@ -330,7 +329,7 @@ void uart_alarm_handling_task(void)
             {
                 //Serial.println(uart.rx.msg.str);
                 uart_parse_rx_frame();
-                // uart_print_rx_metadata();
+                //uart_print_rx_metadata();
                 uart_handle_rx_data();
                 uart_alarm_handle.state = 50;
 

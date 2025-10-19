@@ -194,7 +194,7 @@ uart_st         *uart_p;
 void initialize_tasks(void)
 {
   atask_initialize();
-  //atask_add_new(&debug_print_handle);
+  atask_add_new(&debug_print_handle);
   atask_add_new(&clock_handle);
   atask_add_new(&rfm_receive_handle);
   Serial.print(F("Tasks initialized ")); Serial.println(TASK_NBR_OF);
@@ -283,8 +283,8 @@ void run_100ms(void)
 
 void debug_print_task(void)
 {
-  atask_print_status(true);
-  pir_debug_print();
+  //atask_print_status(true);
+  //pir_debug_print();
   //rfm_send_radiate_msg("Debug");
 }
 

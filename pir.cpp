@@ -34,7 +34,7 @@ typedef struct
 
 void pir_task(void);
 
-atask_st pir_handle     = {"PIR Task       ", 100,0, 0, 255, 0, 1, pir_task};
+atask_st pir_handle     = {"PIR Task       ", 1000,0, 0, 255, 0, 1, pir_task};
 pir_ctrl_st pir_ctrl;
 
 void pir_initialize(void)
@@ -84,7 +84,8 @@ void pir_send_radio_msg(pir_st *pirp)
 
 void pir_state_machine(pir_st *pirp)
 {
-     if(rfm_send_ready())
+    // Serial.print(F("pir_state: ")); Serial.println(pirp->state);
+    if(rfm_send_ready())
     {
         switch(pirp->state)
         {
@@ -126,34 +127,36 @@ void pir_state_machine(pir_st *pirp)
 
 void pir_test_state_machine(pir_test_st *testp, pir_st *pirp)
 {
-    //Serial.print(pirp->state);
-    if(rfm_send_ready())
+    // Serial.print(F("pir_test_state"));
+    // Serial.print(pirp->state);
+    switch(pirp->state)
     {
-        switch(pirp->state)
-        {
-            case 0:  // start
-                if(pirp->prev_active != pirp->new_active)
-                testp->timeout = millis() + testp->interval;
+        case 0:  // start
+            if(pirp->prev_active != pirp->new_active)
+            testp->timeout = millis() + testp->interval;
+            pirp->state = 10;
+            break;
+        case 10:  
+            if(rfm_send_ready()) pirp->state = 12;
+            else Serial.println(F("NOT rfm_send_ready"));
+            break;
+        case 12:    
+            if( millis() > testp->timeout) 
+            {
+                pirp->state = 20;
+                pirp->new_active = PIR_STATUS_ACTIVE;
+                pir_send_radio_msg(pirp);
+            }
+            break;
+        case 20:
+            if( millis() > testp->timeout) 
+            {
                 pirp->state = 10;
-                break;
-            case 10:  
-                if( millis() > testp->timeout) 
-                {
-                    pirp->state = 20;
-                    pirp->new_active = PIR_STATUS_ACTIVE;
-                    pir_send_radio_msg(pirp);
-                }
-                break;
-            case 20:
-                if( millis() > testp->timeout) 
-                {
-                    pirp->state = 10;
-                    testp->timeout = millis() + testp->interval;
-                    pirp->new_active = PIR_STATUS_INACTIVE;
-                    pir_send_radio_msg(pirp);
-                }
-                break;
-        }
+                testp->timeout = millis() + testp->interval;
+                pirp->new_active = PIR_STATUS_INACTIVE;
+                pir_send_radio_msg(pirp);
+            }
+            break;
     }
 }
 
