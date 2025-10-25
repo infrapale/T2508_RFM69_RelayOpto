@@ -16,8 +16,8 @@ typedef struct
 
 pir_st  pir[NBR_OF_PIR] = 
 {
-    {"Piha", "PIR1", 0, 0, 0, 0},
-    {"Piha", "PIR2", 0, 0, 0, 0},
+    {"Piha", "PIR1", 0, 0, 0, 0, 0},
+    {"Piha", "PIR2", 0, 0, 0, 0, 0},
 };
 
 pir_test_st pir_test[NBR_OF_PIR] = 
@@ -34,7 +34,7 @@ typedef struct
 
 void pir_task(void);
 
-atask_st pir_handle     = {"PIR Task       ", 1000,0, 0, 255, 0, 1, pir_task};
+atask_st pir_handle     = {"PIR Task       ", 100,0, 0, 255, 0, 1, pir_task};
 pir_ctrl_st pir_ctrl;
 
 void pir_initialize(void)
@@ -84,32 +84,50 @@ void pir_send_radio_msg(pir_st *pirp)
 
 void pir_state_machine(pir_st *pirp)
 {
+    bool state_changed;
     // Serial.print(F("pir_state: ")); Serial.println(pirp->state);
     if(rfm_send_ready())
     {
         switch(pirp->state)
         {
-            case 0:  // start
-                if(pirp->prev_active != pirp->new_active)
+            case 0:
                 pirp->state = 10;
-                break;
-            case 10:  // not activated
-                pirp->prev_active = pirp->new_active;
-                pir_send_radio_msg(pirp);
-                Serial.print(F("pir_send_radio_msg:")); Serial.println(pirp->name);
-                if(pirp->new_active == PIR_STATUS_ACTIVE)
+            case 10:  // start
+                state_changed = false;
+                switch(pirp->new_active)
                 {
+                    case PIR_STATUS_UNDEFINED:
+                        break;
+                    case PIR_STATUS_ACTIVE:
+                        state_changed = true;
+                        pirp->state = 100;
+                        break;
+                   case PIR_STATUS_INACTIVE:
+                        pirp->state = 100;
+                        state_changed = true;
+                        break;
+                }
+                if (state_changed) {
+                    pirp->prev_active = pirp->new_active;
+                    pir_send_radio_msg(pirp);
+                    Serial.print(F("pir_send_radio_msg:")); Serial.println(pirp->name);
                     pirp->timeout = millis() + 2000;
+                    pirp->static_timeout = millis() + 300000;
                 }
-                else if(pirp->new_active == PIR_STATUS_INACTIVE)
+                break;
+            case 100:  // activated
+                if(millis() > pirp->timeout) pirp->state = 110;
+
+                break;
+            case 110:   
+                if(pirp->prev_active != pirp->new_active)
                 {
-                    pirp->timeout = millis() + 1000;
+                    pirp->state = 10;
                 }
-                pirp->state = 20;
-                break;
-            case 20:
-                if(millis() > pirp->timeout) pirp->state = 0;
-                break;
+                else if (millis() > pirp->static_timeout) {
+                    pirp->prev_active = PIR_STATUS_UNDEFINED;
+                    pirp->state = 10;
+                }
         }
         if (pirp->state != pirp->prev_state )
         {
@@ -118,7 +136,7 @@ void pir_state_machine(pir_st *pirp)
             // Serial.print(pirp->prev_state); Serial.print(F("->:"));
             // Serial.print(pirp->state); Serial.print(F(": "));
             // Serial.print(pirp->new_active); Serial.println();
-            pirp->prev_state =pirp->state;
+            //pirp->prev_state =pirp->state;
         }
 
     }

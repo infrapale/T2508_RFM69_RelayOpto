@@ -22,6 +22,7 @@ typedef struct
     uint8_t     new_active;
     uint8_t     prev_active;
     uint32_t    timeout;
+    uint32_t    static_timeout;
 } pir_st;
 
 void pir_initialize(void);
